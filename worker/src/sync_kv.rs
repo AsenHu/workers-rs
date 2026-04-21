@@ -1,23 +1,24 @@
-//! Synchronous key-value storage exposed by Durable Objects via [`Storage::kv`](crate::Storage::kv).
+//! Bindings for Cloudflare Durable Objects' Synchronous KV API exposed via
+//! [`Storage::kv`](crate::Storage::kv).
 //!
-//! This API mirrors a subset of [`Storage`](crate::Storage), but performs reads, writes, and
-//! listing synchronously. Values are converted with [`serde_wasm_bindgen`], allowing typed access
-//! through `serde`.
+//! This is the `ctx.storage.kv` API available on SQLite-backed Durable Objects.
+//! Entries are stored in the Durable Object's hidden `__cf_kv` SQLite table.
+//! Values are converted with [`serde_wasm_bindgen`], allowing typed access through `serde`.
 
 use core::fmt;
 use std::marker::PhantomData;
 
-use serde::{Serialize, de::DeserializeOwned};
+use serde::{de::DeserializeOwned, Serialize};
 use serde_wasm_bindgen as swb;
 use wasm_bindgen::JsCast as _;
 use worker_sys::types::SyncKvStorage as SyncKvStorageSys;
 
 use crate::{Error, ListOptions, Result};
 
-/// Synchronous key-value storage exposed by [`Storage::kv`](crate::Storage::kv).
+/// Cloudflare Durable Objects' Synchronous KV API exposed by [`Storage::kv`](crate::Storage::kv).
 ///
-/// Unlike [`Storage`](crate::Storage), these methods do not return futures. Values are serialized
-/// with [`Serialize`] and deserialized with [`DeserializeOwned`].
+/// This is the `ctx.storage.kv` interface for SQLite-backed Durable Objects.
+/// Values are serialized with [`Serialize`] and deserialized with [`DeserializeOwned`].
 #[derive(Clone)]
 pub struct SyncKvStorage {
     inner: SyncKvStorageSys,

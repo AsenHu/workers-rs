@@ -572,7 +572,7 @@ impl Storage {
 
     /// Access the synchronous key-value APIs exposed at `ctx.storage.kv`.
     ///
-    /// This API mirrors a subset of [`Storage`], but performs operations synchronously.
+    /// This is Cloudflare's Synchronous KV API for SQLite-backed Durable Objects
     pub fn kv(&self) -> crate::sync_kv::SyncKvStorage {
         crate::sync_kv::SyncKvStorage::new(self.inner.kv())
     }
