@@ -1,3 +1,9 @@
+//! Synchronous key-value storage exposed by Durable Objects via [`Storage::kv`](crate::Storage::kv).
+//!
+//! This API mirrors a subset of [`Storage`](crate::Storage), but performs reads, writes, and
+//! listing synchronously. Values are converted with [`serde_wasm_bindgen`], allowing typed access
+//! through `serde`.
+
 use core::fmt;
 use std::marker::PhantomData;
 
@@ -8,6 +14,10 @@ use worker_sys::types::SyncKvStorage as SyncKvStorageSys;
 
 use crate::{Error, ListOptions, Result};
 
+/// Synchronous key-value storage exposed by [`Storage::kv`](crate::Storage::kv).
+///
+/// Unlike [`Storage`](crate::Storage), these methods do not return futures. Values are serialized
+/// with [`Serialize`] and deserialized with [`DeserializeOwned`].
 #[derive(Clone)]
 pub struct SyncKvStorage {
     inner: SyncKvStorageSys,
@@ -23,6 +33,9 @@ impl SyncKvStorage {
 }
 
 impl SyncKvStorage {
+    /// Retrieves the value associated with the given key.
+    ///
+    /// Returns `Ok(None)` if the key does not exist.
     pub fn get<T>(&self, key: &str) -> Result<Option<T>>
     where
         T: DeserializeOwned,
@@ -36,6 +49,7 @@ impl SyncKvStorage {
         }
     }
 
+    /// Stores the value and associates it with the given key.
     pub fn put<T>(&self, key: &str, value: T) -> Result<()>
     where
         T: Serialize,
@@ -45,11 +59,18 @@ impl SyncKvStorage {
         Ok(())
     }
 
+    /// Deletes the key and associated value.
+    ///
+    /// Returns `true` if the key existed and was removed, or `false` if it did not exist.
     pub fn delete(&self, key: &str) -> bool {
         self.inner.delete(key)
     }
 }
 
+/// Iterator over typed entries returned by [`SyncKvStorage::list`] and
+/// [`SyncKvStorage::list_with_options`].
+///
+/// Each item yields the key together with its deserialized value.
 pub struct SyncKvIterator<T> {
     inner: js_sys::IntoIter,
     _phantom: PhantomData<T>,
@@ -98,6 +119,9 @@ where
 impl SyncKvStorage {
     const ERR_NOT_AN_ITERABLE: &str = "SyncKvStorage.list() did not return an iterable";
 
+    /// Returns an iterator over all key-value pairs in ascending lexicographic order.
+    ///
+    /// Each iterator item contains the key and a value deserialized as `T`.
     pub fn list<T>(&self) -> Result<SyncKvIterator<T>>
     where
         T: DeserializeOwned,
@@ -111,6 +135,9 @@ impl SyncKvStorage {
         })
     }
 
+    /// Returns an iterator over key-value pairs that match the provided [`ListOptions`].
+    ///
+    /// Each iterator item contains the key and a value deserialized as `T`.
     pub fn list_with_options<T>(&self, options: ListOptions<'_>) -> Result<SyncKvIterator<T>> {
         let js_opts = swb::to_value(&options)?;
 
